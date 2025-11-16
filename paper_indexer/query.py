@@ -16,14 +16,17 @@ from paper_indexer.embedder import GemmaEmbedder
 
 def query(
     query: str,
-    arxiv_id: Optional[str] = None,
+    paper_id: Optional[str] = None,
+    source: Optional[str] = None,
     authors: Optional[str] = None,
     title: Optional[str] = None,
     abstract: Optional[str] = None,
     min_update_date: Optional[str] = None,
     max_update_date: Optional[str] = None,
-    arxiv_categories: Optional[List[str]] = None,
+    categories: Optional[List[str]] = None,
     limit: int = 20,
+    arxiv_id: Optional[str] = None,
+    arxiv_categories: Optional[List[str]] = None,
 ) -> None:
     embedder = GemmaEmbedder()
     client = QdrantClient(host="localhost", port=6333)
@@ -31,7 +34,15 @@ def query(
     must_conditions = []
 
     if arxiv_id:
-        must_conditions.append(FieldCondition(key="arxiv_id", match=MatchValue(value=arxiv_id)))
+        paper_id = arxiv_id
+    if arxiv_categories:
+        categories = arxiv_categories
+
+    if paper_id:
+        must_conditions.append(FieldCondition(key="paper_id", match=MatchValue(value=paper_id)))
+
+    if source:
+        must_conditions.append(FieldCondition(key="source", match=MatchValue(value=source)))
 
     if authors:
         must_conditions.append(FieldCondition(key="authors", match=MatchText(text=authors)))
@@ -52,10 +63,8 @@ def query(
             FieldCondition(key="update_date", range=DatetimeRange(**range_params))
         )
 
-    if arxiv_categories:
-        must_conditions.append(
-            FieldCondition(key="arxiv_categories", match=MatchAny(any=arxiv_categories))
-        )
+    if categories:
+        must_conditions.append(FieldCondition(key="categories", match=MatchAny(any=categories)))
 
     query_filter = Filter(must=must_conditions) if must_conditions else None
 

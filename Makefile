@@ -1,12 +1,15 @@
-.PHONY: black validate install
+.PHONY: black validate install test
 
 install:
 	uv pip install -e .
 
 black:
-	uv run black paper_indexer --line-length 100
+	uv run black paper_indexer tests --line-length 100
+
+test:
+	uv run pytest tests -vs
 
 validate:
-	uv run black paper_indexer --line-length 100
-	uv run flake8 paper_indexer
-	uv run mypy paper_indexer --strict --explicit-package-bases
+	uv run black paper_indexer tests --line-length 100
+	uv run flake8 paper_indexer tests
+	uv run mypy paper_indexer tests --strict --explicit-package-bases
